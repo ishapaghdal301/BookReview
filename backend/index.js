@@ -18,6 +18,9 @@ const corsOptions = {
   credentials: true,
 };
 
+// Scheduler
+require('./scheduler/bookScheduler');
+
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/auth' , authRoutes);

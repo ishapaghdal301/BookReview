@@ -1,43 +1,30 @@
 const axios = require('axios');
-const cheerio = require('cheerio');
-const Book = require('../models/Book');
+const Book = require('../models/Book'); // Adjust the path and model name as needed
 
 const scrapeAndStoreBooks = async () => {
     try {
-        const response = await axios.get('https://books.toscrape.com/catalogue/category/books/mystery_3/index.html');
-        const html = response.data;
-        
-        const $ = cheerio.load(html);
-        
-        const book = $("article");
-        const book_data = [];
-        book.each(function(){
-            title = $(this).find("h3 a").text();
-            book_id = $(this).find("h3 a").text();
-            price = $(this).find(".price_color").text();
-            author = $(this).find("h3 a").text();
-            book_data.push({title , price , author , book_id});
-        })
-        console.log(book_data);
-        // const books = [];
-        // $('.searchResultItem').each((index, element) => {
-        //     const title = $(element).find('.booktitle a').text().trim();
-        //     const bookUrl = $(element).find('.booktitle a').attr('href');
-        //     const book_id = bookUrl.split('/').pop();
-        //     const cover_image = $(element).find('.bookcover img').attr('src');
-        //     const author = $(element).find('.bookauthor').text().replace('by', '').trim();
-        //     const publishedYear = $(element).find('.publishedYear').text().trim();
-        //     const editionsLink = $(element).find('.resultPublisher a').attr('href');
-            
-        //     books.push({ title, book_id, cover_image, author, publishedYear, editionsLink });
-        // });
+        const response = await axios.get('https://openlibrary.org/trending/daily');
+        const data = response.data;
 
-        // // Log books array for debugging
-        // console.log(books);
+        const books = data.works || [];
 
-        // Insert or update books in the database
-        await Book.deleteMany({}); // Clear existing data
-        await Book.insertMany(book_data);
+        if (books.length === 0) {
+            console.log('No books found.');
+            return;
+        }
+
+        // Clear existing data
+        await Book.deleteMany({});
+
+        // Process each book and prepare for insertion
+        const bookDocuments = books.map(book => ({
+            book_id: book.cover_edition_key,
+            title: book.title,
+            author: book.author_name ? book.author_name.join(', ') : 'Unknown'
+        }));
+
+        // Insert new data into the database
+        await Book.insertMany(bookDocuments);
 
         console.log('Scraping and storing books completed.');
     } catch (error) {
