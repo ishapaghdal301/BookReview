@@ -29,6 +29,16 @@ app.use('/books', bookRoutes);
 app.use(express.static('public'));
 app.use(bodyParser.json());
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  if (err.name === 'UnauthorizedError') {
+      res.status(401).json({ message: 'Unauthorized' });
+  } else {
+      console.error(err.stack);
+      res.status(500).send('Something went wrong!');
+  }
+});
+
 // Connect to MongoDB
 connectDB();
 
