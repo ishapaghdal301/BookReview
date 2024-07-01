@@ -10,10 +10,10 @@ const BookSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    author: {
-        type: String,
-        required: true
-    },
+    // author: {
+    //     type: String,
+    //     required: true
+    // },
     cover_url: {
         type: String
     },

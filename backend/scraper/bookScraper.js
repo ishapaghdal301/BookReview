@@ -4,29 +4,40 @@ const Book = require('../models/Book');
 
 const scrapeAndStoreBooks = async () => {
     try {
-        const response = await axios.get('https://openlibrary.org/trending/daily');
+        const response = await axios.get('https://books.toscrape.com/catalogue/category/books/mystery_3/index.html');
         const html = response.data;
         
-        // Log HTML content for debugging
-        console.log(html);
-
         const $ = cheerio.load(html);
         
-        const books = [];
-        $('.edition-cover').each((index, element) => {
-            const title = $(element).attr('title');
-            const book_id = $(element).attr('href').split('/').pop();
-            // const cover_image = $(element).find('img').attr('src');
+        const book = $("article");
+        const book_data = [];
+        book.each(function(){
+            title = $(this).find("h3 a").text();
+            book_id = $(this).find("h3 a").text();
+            price = $(this).find(".price_color").text();
+            author = $(this).find("h3 a").text();
+            book_data.push({title , price , author , book_id});
+        })
+        console.log(book_data);
+        // const books = [];
+        // $('.searchResultItem').each((index, element) => {
+        //     const title = $(element).find('.booktitle a').text().trim();
+        //     const bookUrl = $(element).find('.booktitle a').attr('href');
+        //     const book_id = bookUrl.split('/').pop();
+        //     const cover_image = $(element).find('.bookcover img').attr('src');
+        //     const author = $(element).find('.bookauthor').text().replace('by', '').trim();
+        //     const publishedYear = $(element).find('.publishedYear').text().trim();
+        //     const editionsLink = $(element).find('.resultPublisher a').attr('href');
+            
+        //     books.push({ title, book_id, cover_image, author, publishedYear, editionsLink });
+        // });
 
-            books.push({ title, book_id});
-        });
-
-        // Log books array for debugging
-        console.log(books);
+        // // Log books array for debugging
+        // console.log(books);
 
         // Insert or update books in the database
         await Book.deleteMany({}); // Clear existing data
-        await Book.insertMany(books);
+        await Book.insertMany(book_data);
 
         console.log('Scraping and storing books completed.');
     } catch (error) {
